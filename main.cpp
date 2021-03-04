@@ -1,4 +1,8 @@
 #include "graph.h"
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 vector <vector <int>> paths;
 void depth_first(graph& s, int efrom, int eto, vector <int> path);
@@ -15,6 +19,38 @@ int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
+    // 1`st arg : edges file
+    // 2`nd arg : connections file
+    if( argc != 3) {
+        cout << "invalid args"<<endl;
+        return -1;
+    }
+    string fname_edges = string(argv[1]);
+    string fname_conns = string(argv[2]);
+    ifstream fedges(fname_edges), fconns(fname_conns);
+    if(!fedges.is_open()) {
+        cout << "cant open edges file" << endl;
+        return -1;
+    }
+    if(!fconns.is_open()) {
+        cout << "cant open conns file" << endl;
+        return -1;
+    }
+
+    string line;
+    vector<vector<string> > parsedCsv;
+    while(getline(fconns,line))
+    {
+        std::stringstream lineStream(line);
+        std::string cell;
+        std::vector<std::string> parsedRow;
+        while(std::getline(lineStream,cell,','))
+        {
+            parsedRow.push_back(cell);
+        }
+
+        parsedCsv.push_back(parsedRow);
+    }
      // defined graph
     // edges are between connections
     vector <int> edges = {0, 1, 2, 3, 4, 5};
