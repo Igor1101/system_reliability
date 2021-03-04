@@ -37,34 +37,55 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    string line;
+    vector <int> edges;
+    vector <graph_connection> connections;
     vector<vector<string> > parsedCsv;
-    while(getline(fconns,line))
-    {
-        std::stringstream lineStream(line);
-        std::string cell;
-        std::vector<std::string> parsedRow;
-        while(std::getline(lineStream,cell,','))
-        {
+    string line;
+    int line_i = 0;
+    while(getline(fconns,line)) {
+        line_i ++;
+        stringstream lineStream(line);
+        string cell;
+        vector<string> parsedRow;
+        while(getline(lineStream,cell,';')) {
             parsedRow.push_back(cell);
         }
-
+        // verify amount of elements in row
+        if(parsedRow.size() != 4) {
+            cout << "connections file data is invalid or corrupted at line " << line_i << endl;
+            return -1;
+        }
+        // here output to connections
+        // 0 from 1 to 2 probability 3 name
+        graph_connection c;
+        c.from = stod(parsedRow[0]);
+        c.to = stod(parsedRow[1]);
+        c.cost = stof(parsedRow[2]);
+        c.name = stod(parsedRow[3]);
+        connections.push_back(c);
         parsedCsv.push_back(parsedRow);
     }
-     // defined graph
     // edges are between connections
-    vector <int> edges = {0, 1, 2, 3, 4, 5};
-    vector <graph_connection> connections = {
-        // from to probability
-        {0, 1, 0.50, 1}, // 1
-        {1, 2, 0.60, 2}, // 2
-        {1, 3, 0.70, 3}, // 3
-        {2, 3, 0.80, 4}, // 4
-        {2, 4, 0.85, 5}, // 5
-        {3, 4, 0.90, 6}, // 6
-        {4, 5, 0.92, 7}, // 7
-        {3, 5, 0.94, 8}, // 8
-    };
+    // get edges
+    line_i = 0;
+    while(getline(fedges,line)) {
+        line_i ++;
+        stringstream lineStream(line);
+        string cell;
+        vector<string> parsedRow;
+        while(getline(lineStream,cell,';')) {
+            parsedRow.push_back(cell);
+        }
+        // verify amount of elements in row
+        if(parsedRow.size() != 1) {
+            cout << "edges file data is invalid or corrupted at line " << line_i << endl;
+            return -1;
+        }
+        // here output to edges
+        edges.push_back(stod(parsedRow[0]));
+        parsedCsv.push_back(parsedRow);
+    }
+
     graph sys(edges, connections);
     sys.print();
     // find path
