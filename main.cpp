@@ -10,6 +10,11 @@ enum state_t{
     WORKING,
     NOTWORKING
 } ;
+// the probability is given
+// of trouble-free operation of system elements during T hours
+// T hours:
+constexpr float T = 10.0;
+
 static bool set_nxtstate(vector<state_t>&states);
 static bool path_found(vector<state_t>&states, vector<graph_connection> cons);
 static void print_states(vector<state_t>&states, vector<graph_connection> cons);
@@ -60,6 +65,7 @@ int main(int argc, char *argv[])
         graph_connection c;
         c.from = stod(parsedRow[0]);
         c.to = stod(parsedRow[1]);
+        // the probability of trouble-free operation of system elements during T hours
         c.cost = stof(parsedRow[2]);
         c.name = stod(parsedRow[3]);
         connections.push_back(c);
@@ -110,6 +116,10 @@ int main(int argc, char *argv[])
             break;
     }
     cout << "result P=" << Pres << endl;
+    // find out intensity
+    float lambda = - log(Pres) / T;
+    cout << "intensity of failures:" << lambda << " H-1" << endl;
+    cout << "operating time to failure:" << 1 / lambda << " H"<< endl;
     return 0;
 }
 
