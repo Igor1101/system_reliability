@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 
 vector <vector <int>> paths;
 void depth_first(graph& s, int efrom, int eto, vector <int> path);
@@ -13,12 +14,17 @@ enum state_t{
 // the probability is given
 // of trouble-free operation of system elements during T hours
 // T hours:
-constexpr float T = 10.0;
+constexpr float T = 1000.0;
+// multiplicity of total unloaded reservation
+constexpr float Ktu = 1.0;
+// multiplicity of separate reservation
+constexpr float Ks = 1.0;
 
 static bool set_nxtstate(vector<state_t>&states);
 static bool path_found(vector<state_t>&states, vector<graph_connection> cons);
 static void print_states(vector<state_t>&states, vector<graph_connection> cons);
 static float probability(vector<state_t>&states, vector<graph_connection> cons);
+int fact(int n);
 
 int main(int argc, char *argv[])
 {
@@ -116,11 +122,73 @@ int main(int argc, char *argv[])
             break;
     }
     cout << "result P=" << Pres << endl;
+    float Qres = 1 - Pres;
+    cout << "result Q=" << Qres << endl;
     // find out intensity
     float lambda = - log(Pres) / T;
-    cout << "intensity of failures:" << lambda << " H-1" << endl;
-    cout << "operating time to failure:" << 1 / lambda << " H"<< endl;
+    cout << "system intensity of failures:" << lambda << " H-1" << endl;
+    cout << "system operating time to failure:" << 1 / lambda << " H"<< endl;
+    // findout P of failure for T hours with general unloaded redundancy
+    float Qrs = 1.0 / fact((int)Ktu+1) * Qres;
+    cout << "Q reserved system=" << Qrs << endl;
+    float Prs = 1.0 - Qrs;
+    cout << "P reserved system=" << Prs << endl;
+    // find out intensity of res system
+    float lambdars = - log(Prs) / T;
+    cout << "reserved system intensity of failures:" << lambdars << " H-1" << endl;
+    cout << "reserved system operating time to failure:" << 1 / lambdars << " H"<< endl;
+    //    gain reliability
+    float Gq  = Qrs / Qres;
+    cout << "Gq = " << Gq << endl;
+    float Gp  = Prs / Pres;
+    cout << "Gp = " << Gp << endl;
+    float Gt = lambda / lambdars;
+    cout << "Gt = " << Gt << endl;
+    // loaded redundancy, each element
+    // edit probabilities
+    for(unsigned c=0; c<connections.size(); c++) {
+        float p = connections[c].cost;
+        connections[c].cost = 1 - pow(1-p, (int)Ks + 1);
+    }
+    // get new probability
+    // find out working states
+     con_states.clear();
+    for(unsigned i=0; i<connections.size(); i++) {
+        con_states.push_back(WORKING);
+    }
+    float Pseparated = 0;
+    for(; ;) {
+        if(path_found(con_states, connections)) {
+            // calc probability
+            float P = probability(con_states, connections);
+            //print_states(con_states, connections);
+            //cout << "P=" << P << endl;
+            Pseparated += P;
+        }
+        bool res = set_nxtstate(con_states);
+        if(res)
+            break;
+    }
+
+    cout << "result P separated=" << Pseparated<< endl;
+     float Qseparated = 1.0 - Pseparated;
+    cout << "Q reserved system=" << Qseparated << endl;
+    // find out intensity of res system
+    float lambdasep = - log(Pseparated) / T;
+    cout << "separated reserved system intensity of failures:" << lambdasep << " H-1" << endl;
+    cout << "separated reserved system operating time to failure:" << 1 / lambdasep << " H"<< endl;
+    //    gain reliability
+    float Gqsep  = Qseparated / Qres;
+    cout << "Gq separated = " << Gqsep << endl;
+    float Gpsep  = Pseparated / Pres;
+    cout << "Gp separated = " << Gpsep << endl;
+    float Gtsep = lambda / lambdasep;
+    cout << "Gt separated = " << Gtsep << endl;
     return 0;
+}
+int fact(int n)
+{
+     return (n==0) || (n==1) ? 1 : n* fact(n-1);
 }
 
 static void print_states(vector<state_t>&states, vector<graph_connection> cons)
